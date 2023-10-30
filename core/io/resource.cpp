@@ -387,6 +387,10 @@ void Resource::reset_local_to_scene() {
 	// Restores the state as if setup_local_to_scene() hadn't been called.
 }
 
+void Resource::reset_local_to_scene() {
+	// Restores the state as if setup_local_to_scene() hadn't been called.
+}
+
 Node *(*Resource::_get_local_scene_func)() = nullptr;
 void (*Resource::_update_configuration_warning)() = nullptr;
 

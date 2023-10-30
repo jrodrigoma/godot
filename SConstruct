@@ -193,7 +193,7 @@ opts.Add(BoolVariable("vulkan", "Enable the vulkan rendering driver", True))
 opts.Add(BoolVariable("opengl3", "Enable the OpenGL/GLES3 rendering driver", True))
 opts.Add(BoolVariable("openxr", "Enable the OpenXR driver", True))
 opts.Add(BoolVariable("use_volk", "Use the volk library to load the Vulkan loader dynamically", True))
-opts.Add(BoolVariable("disable_exceptions", "Force disabling exception handling code", True))
+opts.Add(BoolVariable("disable_exceptions", "Force disabling exception handling code", False))
 opts.Add("custom_modules", "A list of comma-separated directory paths containing custom modules to build.", "")
 opts.Add(BoolVariable("custom_modules_recursive", "Detect custom modules recursively for each specified path.", True))
 
@@ -221,12 +221,10 @@ opts.Add(
 )
 opts.Add(BoolVariable("use_precise_math_checks", "Math checks use very precise epsilon (debug option)", False))
 opts.Add(BoolVariable("scu_build", "Use single compilation unit build", False))
-opts.Add("scu_limit", "Max includes per SCU file when using scu_build (determines RAM use)", "0")
 
 # Thirdparty libraries
 opts.Add(BoolVariable("builtin_brotli", "Use the built-in Brotli library", True))
 opts.Add(BoolVariable("builtin_certs", "Use the built-in SSL certificates bundles", True))
-opts.Add(BoolVariable("builtin_clipper2", "Use the built-in Clipper2 library", True))
 opts.Add(BoolVariable("builtin_embree", "Use the built-in Embree library", True))
 opts.Add(BoolVariable("builtin_enet", "Use the built-in ENet library", True))
 opts.Add(BoolVariable("builtin_freetype", "Use the built-in FreeType library", True))
@@ -554,16 +552,7 @@ if selected_platform in platform_list:
 
     # Run SCU file generation script if in a SCU build.
     if env["scu_build"]:
-        max_includes_per_scu = 8
-        if env_base.dev_build == True:
-            max_includes_per_scu = 1024
-
-        read_scu_limit = int(env["scu_limit"])
-        read_scu_limit = max(0, min(read_scu_limit, 1024))
-        if read_scu_limit != 0:
-            max_includes_per_scu = read_scu_limit
-
-        methods.set_scu_folders(scu_builders.generate_scu_files(env["verbose"], max_includes_per_scu))
+        methods.set_scu_folders(scu_builders.generate_scu_files(env["verbose"], env_base.dev_build == False))
 
     # Must happen after the flags' definition, as configure is when most flags
     # are actually handled to change compile options, etc.
@@ -580,8 +569,6 @@ if selected_platform in platform_list:
         if env["debug_symbols"]:
             env.Append(CCFLAGS=["/Zi", "/FS"])
             env.Append(LINKFLAGS=["/DEBUG:FULL"])
-        else:
-            env.Append(LINKFLAGS=["/DEBUG:NONE"])
 
         if env["optimize"] == "speed":
             env.Append(CCFLAGS=["/O2"])
@@ -720,9 +707,9 @@ if selected_platform in platform_list:
         if env.msvc:
             env.Append(CPPDEFINES=[("_HAS_EXCEPTIONS", 0)])
         else:
-            env.Append(CCFLAGS=["-fno-exceptions"])
+            env.Append(CXXFLAGS=["-fno-exceptions"])
     elif env.msvc:
-        env.Append(CCFLAGS=["/EHsc"])
+        env.Append(CXXFLAGS=["/EHsc"])
 
     # Configure compiler warnings
     if env.msvc:  # MSVC

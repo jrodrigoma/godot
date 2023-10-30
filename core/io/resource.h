@@ -33,7 +33,6 @@
 
 #include "core/io/resource_uid.h"
 #include "core/object/class_db.h"
-#include "core/object/gdvirtual.gen.inc"
 #include "core/object/ref_counted.h"
 #include "core/templates/safe_refcount.h"
 #include "core/templates/self_list.h"
@@ -55,6 +54,8 @@ public:
 	virtual String get_base_extension() const { return "res"; }
 
 private:
+	HashSet<ObjectID> owners;
+
 	friend class ResBase;
 	friend class ResourceCache;
 
@@ -75,6 +76,10 @@ private:
 	SelfList<Resource> remapped_list;
 
 protected:
+	void emit_changed();
+
+	void notify_change_to_owners();
+
 	virtual void _resource_path_changed();
 	static void _bind_methods();
 
@@ -82,7 +87,6 @@ protected:
 	void _take_over_path(const String &p_path);
 
 	virtual void reset_local_to_scene();
-	GDVIRTUAL0(_setup_local_to_scene);
 
 public:
 	static Node *(*_get_local_scene_func)(); //used by editor
@@ -94,9 +98,8 @@ public:
 	virtual Error copy_from(const Ref<Resource> &p_resource);
 	virtual void reload_from_file();
 
-	void emit_changed();
-	void connect_changed(const Callable &p_callable, uint32_t p_flags = 0);
-	void disconnect_changed(const Callable &p_callable);
+	void register_owner(Object *p_owner);
+	void unregister_owner(Object *p_owner);
 
 	void set_name(const String &p_name);
 	String get_name() const;
