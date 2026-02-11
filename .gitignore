@@ -351,6 +351,7 @@ enc_temp_folder/
 *.jfm
 *.pfx
 *.publishsettings
+*.args.json
 orleans.codegen.cs
 
 # Backup & report files from converting an old project file
